@@ -8,7 +8,7 @@ async function getStatus(req, res) {
 }
 
 async function getStats(req, res) {
-  const users = await redisClient.nbUsers();
+  const users = await dbClient.nbUsers();
   const files = await dbClient.nbFiles();
   return res.status(200).json({ users, files });
 }
