@@ -51,6 +51,30 @@ class DBClient {
       return null;
     }
   }
+
+  async fetchUser(email) {
+    try {
+      const result = await this.db.collection('users').find({ email }).toArray();
+      return result;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  }
+
+  async insertUser(email, password) {
+    try {
+      const newUser = {
+        email,
+        password,
+      };
+      const result = await this.db.collection('users').insertOne(newUser);
+      return result;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
 }
 
 export default new DBClient();

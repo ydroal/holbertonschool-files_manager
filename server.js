@@ -4,7 +4,9 @@ import router from './routes/index';
 const port = process.env.EXPRESS_PORT || 5000;
 const app = express();
 
+app.use(express.json()); // JSON形式のリクエストボディを解析
 app.use('/', router);
+
 app.listen(port, (err) => {
   if (err) {
     console.error(`Error starting server: ${err}`);
