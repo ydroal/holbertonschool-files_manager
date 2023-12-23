@@ -20,6 +20,7 @@ class RedisClient {
     const getAsync = promisify(this.client.get).bind(this.client);
     try {
       const reply = await getAsync(key);
+      console.log(reply);
       return reply;
     } catch (err) {
       console.log('Error:', err);

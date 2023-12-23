@@ -1,4 +1,4 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 
 const host = process.env.DB_HOST || 'localhost';
 const port = process.env.DB_PORT || 27017;
@@ -73,6 +73,28 @@ class DBClient {
     } catch (err) {
       console.error(err);
       throw err;
+    }
+  }
+
+  async fetchUserByEmailAndPassword(email, hashedPassword) {
+    try {
+      const result = await this.db.collection('users').findOne({ email, password: hashedPassword });
+      console.log(result);
+      return result;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  }
+
+  async fetchUserByUserId(userId) {
+    try {
+      const objectId = new ObjectId(userId);
+      const result = await this.db.collection('users').findOne({ _id: objectId });
+      return result;
+    } catch (err) {
+      console.error(err);
+      return null;
     }
   }
 }
