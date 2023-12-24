@@ -35,7 +35,8 @@ async function postUpload(req, res) {
   };
   
   if (type === 'folder') {
-    await fileUtils.insertFileDocument(fileDocument);
+    const insertResult = await fileUtils.insertFileDocument(fileDocument);
+    fileDocument.id = insertResult.insertedId.toString();
     return res.status(201).send(fileDocument);
   }
   
@@ -56,6 +57,7 @@ async function postUpload(req, res) {
     fileDocument.localPath = localPath;
    
     await fileUtils.insertFileDocument(fileDocument);
+    delete fileDocument.localPath;
     return res.status(201).send(fileDocument);
   }
 }
