@@ -36,7 +36,7 @@ async function getDisconnect(req, res) {
 
   if (!tokenExistance) return res.status(401).send({ error: 'Unauthorized' });
   await redisClient.del(key);
-  return res.status(204);
+  return res.status(204).send();
 }
 
 export { getConnect, getDisconnect };
