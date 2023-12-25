@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { getStatus, getStats } from '../controllers/AppController';
 import { postNew, getMe } from '../controllers/UsersController';
 import { getConnect, getDisconnect } from '../controllers/AuthController';
-import { postUpload } from '../controllers/FilesController';
+import postUpload from '../controllers/FilesController';
 
 const router = Router();
 

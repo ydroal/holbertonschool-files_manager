@@ -16,12 +16,15 @@ const fileUtils = {
   async insertFileDocument(document){
     try {
       const result = await dbClient.db.collection('files').insertOne(document);
-      return !!result;
+      if (result.insertedId) {
+        return result;
+      }
+      throw new Error('Document insertion failed');
     } catch (err) {
       console.error(err);
       throw err;
     }
-  }
+}
 }
 
 export default fileUtils;
