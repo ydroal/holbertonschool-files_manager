@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ObjectId } from 'mongodb';
 import fs from 'fs';
 import { Buffer } from 'buffer';
+import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 import fileUtils from '../utils/files';
 import { getUserId } from './UsersController';
@@ -113,4 +114,62 @@ async function getIndex(req, res) {
   return res.status(200).send(response);
 }
 
-export { postUpload, getShow, getIndex };
+async function putPublish(req, res) {
+  const userId = await getUserId(req);
+  if (!userId) return res.status(401).send({ error: 'Unauthorized' });
+
+  const fileId = req.params.id;
+
+  const updateResult = await dbClient.db.collection('files').findOneAndUpdate(
+    { _id: new ObjectId(fileId), userId: new ObjectId(userId) },
+    { $set: { isPublic: true } },
+    { returnOriginal: false },
+  );
+
+  if (!updateResult.value) {
+    return res.status(404).send({ error: 'Not found' });
+  }
+
+  const response = {
+    id: updateResult.value._id,
+    userId: updateResult.value.userId,
+    name: updateResult.value.name,
+    type: updateResult.value.type,
+    isPublic: updateResult.value.isPublic,
+    parentId: updateResult.value.parentId,
+  };
+
+  return res.status(200).send(response);
+}
+
+async function putUnpublish(req, res) {
+  const userId = await getUserId(req);
+  if (!userId) return res.status(401).send({ error: 'Unauthorized' });
+
+  const fileId = req.params.id;
+
+  const updateResult = await dbClient.db.collection('files').findOneAndUpdate(
+    { _id: new ObjectId(fileId), userId: new ObjectId(userId) },
+    { $set: { isPublic: false } },
+    { returnOriginal: false },
+  );
+
+  if (!updateResult.value) {
+    return res.status(404).send({ error: 'Not found' });
+  }
+
+  const response = {
+    id: updateResult.value._id,
+    userId: updateResult.value.userId,
+    name: updateResult.value.name,
+    type: updateResult.value.type,
+    isPublic: updateResult.value.isPublic,
+    parentId: updateResult.value.parentId,
+  };
+
+  return res.status(200).send(response);
+}
+
+export {
+  postUpload, getShow, getIndex, putPublish, putUnpublish,
+};
