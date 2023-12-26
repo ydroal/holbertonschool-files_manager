@@ -23,6 +23,7 @@ class DBClient {
       await this.client.connect();
       this.db = this.client.db(database); // MongoDBのデータベースオブジェクトを保管
       this.connected = true;
+      console.log('Successfully connected to MongoDB');
       return null;
     } catch (err) {
       console.error(err);

@@ -1,8 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import { Buffer } from 'buffer';
+import { ObjectId } from 'mongodb';
 import redisClient from '../utils/redis';
+import dbClient from '../utils/db';
 import fileUtils from '../utils/files';
+import { getUserId } from './UsersController';
 
 async function postUpload(req, res) {
   const fileType = ['folder', 'file', 'image'];
@@ -27,7 +30,7 @@ async function postUpload(req, res) {
   if (!type || !(fileType.includes(type))) return res.status(400).send({ error: 'Missing type' });
   if (!data && type !== 'folder') return res.status(400).send({ error: 'Missing data' });
   if (parentId) {
-    const result = await fileUtils.fetchFileByParentId(parentId);
+    const result = await fileUtils.fetchFileById(parentId);
     if (!result) return res.status(400).send({ error: 'Parent not found' });
     if (result.type !== 'folder') return res.status(400).send({ error: 'Parent is not a folder' });
   }
@@ -73,4 +76,30 @@ async function postUpload(req, res) {
   return res.status(400).send({ error: 'Invalid type' });
 }
 
-export default postUpload;
+async function getShow(req, res) {
+  const userId = await getUserId(req);
+  if (!userId) return res.status(401).send({ error: 'Unauthorized' });
+  const userObjectId = new ObjectId(userId);
+
+  const user = await dbClient.fetchUserByUserId(userId);
+  if (!user) return res.status(401).send({ error: 'Unauthorized' });
+
+  const fileId = req.params.id;
+  const file = await fileUtils.fetchFileById(fileId);
+  if (!file || file.userId !== userObjectId) return res.status(404).send({ error: 'Not found' });
+
+  return res.status(200).send(file);
+}
+
+async function getIndex(req, res) {
+  const userId = await getUserId(req);
+  if (!userId) return res.status(401).send({ error: 'Unauthorized' });
+
+  const parentId = req.query.parentId || '0';
+  const page = parseInt(req.query.page, 10) || 0;
+
+  const files = await fileUtils.fetchFilesByParentIdAndUserId(parentId, userId, page);
+  return res.status(200).send(files);
+}
+
+export { postUpload, getShow, getIndex };

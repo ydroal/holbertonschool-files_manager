@@ -24,21 +24,26 @@ async function postNew(req, res) {
   }
 }
 
-async function getMe(req, res) {
+async function getUserId(req) {
   const authToken = req.header('X-Token');
-  console.log(authToken);
-  if (!authToken) return res.status(401).send({ error: 'Unauthorized' });
+  if (!authToken) return null;
 
   const key = `auth_${authToken}`;
-
-  const userId = await redisClient.get(key);
-  console.log(userId);
-  if (!userId) {
-    return res.status(401).send({ error: 'Unauthorized' });
+  try {
+    const userId = await redisClient.get(key);
+    return userId || null;
+  } catch (err) {
+    console.error(err);
+    return null;
   }
+}
+
+async function getMe(req, res) {
+  const userId = await getUserId(req);
+  if (!userId) return res.status(401).send({ error: 'Unauthorized' });
 
   const result = await dbClient.fetchUserByUserId(userId);
   return res.status(200).send({ id: userId, email: result.email });
 }
 
-export { postNew, getMe };
+export { postNew, getMe, getUserId };
