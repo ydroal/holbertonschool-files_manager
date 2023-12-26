@@ -80,7 +80,12 @@ async function getShow(req, res) {
 
   const fileId = req.params.id;
   const file = await fileUtils.fetchFileById(fileId);
+
   if (!file || file.userId !== userId) return res.status(404).send({ error: 'Not found' });
+
+  file.id = file._id.toString();
+  delete file._id;
+  delete file.localPath;
 
   return res.status(200).send(file);
 }
@@ -93,7 +98,17 @@ async function getIndex(req, res) {
   const page = parseInt(req.query.page, 10) || 0;
 
   const files = await fileUtils.fetchFilesByParentIdAndUserId(parentId, userId, page);
-  return res.status(200).send(files);
+
+  const response = files.map((file) => ({
+    id: file._id.toString(),
+    userId: file.userId,
+    name: file.name,
+    type: file.type,
+    isPublic: file.isPublic,
+    parentId: file.parentId,
+  }));
+
+  return res.status(200).send(response);
 }
 
 export { postUpload, getShow, getIndex };
