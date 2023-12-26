@@ -2,7 +2,9 @@ import { Router } from 'express';
 import { getStatus, getStats } from '../controllers/AppController';
 import { postNew, getMe } from '../controllers/UsersController';
 import { getConnect, getDisconnect } from '../controllers/AuthController';
-import { postUpload, getShow, getIndex, putPublish, putUnpublish } from '../controllers/FilesController';
+import {
+  postUpload, getShow, getIndex, putPublish, putUnpublish,
+} from '../controllers/FilesController';
 
 const router = Router();
 
