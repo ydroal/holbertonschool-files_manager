@@ -26,18 +26,6 @@ const fileUtils = {
     }
   },
 
-  async fetchFileByIdAndUserId(fileId, userId) {
-    try {
-      const objectId = new ObjectId(fileId);
-      const userObjectId = new ObjectId(userId);
-      const result = await dbClient.db.collection('files').findOne({ _id: objectId, userId: userObjectId });
-      return result;
-    } catch (err) {
-      console.error(err);
-      return null;
-    }
-  },
-
   async fetchFilesByParentIdAndUserId(parentId, userId, page) {
     try {
       const query = { userId };
