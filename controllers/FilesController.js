@@ -1,9 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import { Buffer } from 'buffer';
-import { ObjectId } from 'mongodb';
 import redisClient from '../utils/redis';
-import dbClient from '../utils/db';
 import fileUtils from '../utils/files';
 import { getUserId } from './UsersController';
 
@@ -79,14 +77,10 @@ async function postUpload(req, res) {
 async function getShow(req, res) {
   const userId = await getUserId(req);
   if (!userId) return res.status(401).send({ error: 'Unauthorized' });
-  const userObjectId = new ObjectId(userId);
-
-  const user = await dbClient.fetchUserByUserId(userId);
-  if (!user) return res.status(401).send({ error: 'Unauthorized' });
 
   const fileId = req.params.id;
   const file = await fileUtils.fetchFileById(fileId);
-  if (!file || file.userId !== userObjectId) return res.status(404).send({ error: 'Not found' });
+  if (!file || file.userId !== userId) return res.status(404).send({ error: 'Not found' });
 
   return res.status(200).send(file);
 }

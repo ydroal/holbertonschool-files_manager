@@ -34,10 +34,14 @@ const fileUtils = {
         query.parentId = parentId;
       }
 
+      const pipeline = [
+        { $match: query },
+        { $skip: page * 20 },
+        { $limit: 20 },
+      ];
+
       const files = await dbClient.db.collection('files')
-        .find(query)
-        .skip(page * 20)
-        .limit(20)
+        .aggregate(pipeline)
         .toArray();
 
       return files;
