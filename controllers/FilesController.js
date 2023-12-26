@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ObjectId } from 'mongodb';
 import fs from 'fs';
 import { Buffer } from 'buffer';
+import mime from 'mime-types';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 import fileUtils from '../utils/files';
@@ -170,6 +171,33 @@ async function putUnpublish(req, res) {
   return res.status(200).send(response);
 }
 
+async function getFile(req, res) {
+  const fileId = req.params.id;
+  const userId = await getUserId(req);
+  const file = await fileUtils.fetchFileById(fileId);
+
+  if (!file) {
+    return res.status(404).send({ error: 'Not found' });
+  }
+
+  if (!file.isPublic && (!userId || file.userId.toString() !== userId)) {
+    return res.status(404).send({ error: 'Not found' });
+  }
+
+  if (file.type === 'folder') {
+    return res.status(400).send({ error: "A folder doesn't have content" });
+  }
+
+  try {
+    const fileContent = fs.readFileSync(file.localPath);
+    const mimeType = mime.lookup(file.name);
+    res.setHeader('Content-Type', mimeType);
+    return res.send(fileContent);
+  } catch (err) {
+    return res.status(404).send({ error: 'Not found' });
+  }
+}
+
 export {
-  postUpload, getShow, getIndex, putPublish, putUnpublish,
+  postUpload, getShow, getIndex, putPublish, putUnpublish, getFile,
 };
