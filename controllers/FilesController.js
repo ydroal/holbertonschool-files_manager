@@ -80,9 +80,9 @@ async function getShow(req, res) {
   if (!userId) return res.status(401).send({ error: 'Unauthorized' });
 
   const fileId = req.params.id;
-  const file = await fileUtils.fetchFileByIdAndUserId(fileId, userId);
+  const file = await fileUtils.fetchFileById(fileId);
 
-  if (!file) return res.status(404).send({ error: 'Not found' });
+  if (!file || file.userId !== new ObjectId(userId)) return res.status(404).send({ error: 'Not found' });
 
   file.id = file._id.toString();
   delete file._id;
@@ -96,8 +96,8 @@ async function getIndex(req, res) {
   if (!userId) return res.status(401).send({ error: 'Unauthorized' });
 
   const userObjectId = new ObjectId(userId);
-  const parentId = req.query.parentId || '0';
-  const page = parseInt(req.query.page, 10) || 0;
+  const parentId = req.query.parentId || 0;
+  const page = req.query.page || 0;
 
   const files = await fileUtils.fetchFilesByParentIdAndUserId(parentId, userObjectId, page);
 
