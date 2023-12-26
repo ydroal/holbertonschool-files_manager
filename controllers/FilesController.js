@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { ObjectId } from 'mongodb';
 import fs from 'fs';
 import { Buffer } from 'buffer';
 import redisClient from '../utils/redis';
@@ -34,7 +35,7 @@ async function postUpload(req, res) {
   }
 
   const fileDocument = {
-    userId: tokenExistance,
+    userId: new ObjectId(tokenExistance),
     name,
     type,
     isPublic: isPublic || false,
@@ -81,7 +82,7 @@ async function getShow(req, res) {
   const fileId = req.params.id;
   const file = await fileUtils.fetchFileById(fileId);
 
-  if (!file || file.userId !== userId) return res.status(404).send({ error: 'Not found' });
+  if (!file || file.userId !== new ObjectId(userId)) return res.status(404).send({ error: 'Not found' });
 
   file.id = file._id.toString();
   delete file._id;
@@ -94,14 +95,15 @@ async function getIndex(req, res) {
   const userId = await getUserId(req);
   if (!userId) return res.status(401).send({ error: 'Unauthorized' });
 
+  const userObjectId = new ObjectId(userId);
   const parentId = req.query.parentId || '0';
   const page = parseInt(req.query.page, 10) || 0;
 
-  const files = await fileUtils.fetchFilesByParentIdAndUserId(parentId, userId, page);
+  const files = await fileUtils.fetchFilesByParentIdAndUserId(parentId, userObjectId, page);
 
   const response = files.map((file) => ({
     id: file._id.toString(),
-    userId: file.userId,
+    userId: file.userId.toString(),
     name: file.name,
     type: file.type,
     isPublic: file.isPublic,
