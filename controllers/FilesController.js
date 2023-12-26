@@ -96,8 +96,8 @@ async function getIndex(req, res) {
   if (!userId) return res.status(401).send({ error: 'Unauthorized' });
 
   const userObjectId = new ObjectId(userId);
-  const parentId = req.query.parentId || '0';
-  const page = parseInt(req.query.page, 10) || 0;
+  const parentId = req.query.parentId || 0;
+  const page = req.query.page || 0;
 
   const files = await fileUtils.fetchFilesByParentIdAndUserId(parentId, userObjectId, page);
 
