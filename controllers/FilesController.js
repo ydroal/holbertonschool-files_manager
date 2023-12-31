@@ -7,6 +7,7 @@ import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 import fileUtils from '../utils/files';
 import { getUserId } from './UsersController';
+import fileQueue from '../worker';
 
 async function postUpload(req, res) {
   const fileType = ['folder', 'file', 'image'];
@@ -68,12 +69,17 @@ async function postUpload(req, res) {
 
     fileDocument.localPath = localPath;
     const insertResult = await fileUtils.insertFileDocument(fileDocument);
+
+    // 画像の場合、サムネイル生成ジョブをキューに追加
+    if (type === 'image') {
+      await fileQueue.add({ userId: fileDocument.userId, fileId: insertResult.insertedId });
+    }
+
     fileDocument.id = insertResult.insertedId.toString();
     delete fileDocument._id;
     delete fileDocument.localPath;
     return res.status(201).send(fileDocument);
   }
-
   return res.status(400).send({ error: 'Invalid type' });
 }
 
@@ -174,6 +180,7 @@ async function putUnpublish(req, res) {
 async function getFile(req, res) {
   const fileId = req.params.id;
   const userId = await getUserId(req);
+  const { size } = req.query;
   const file = await fileUtils.fetchFileById(fileId);
 
   if (!file) {
@@ -188,8 +195,18 @@ async function getFile(req, res) {
     return res.status(400).send({ error: "A folder doesn't have content" });
   }
 
+  const thumbnailSizes = ['500', '250', '100'];
+  let filePath = file.localPath;
+
+  if (size && thumbnailSizes.includes(size)) {
+    filePath = `${filePath}_${size}`;
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send({ error: 'Not found' });
+    }
+  }
+
   try {
-    const fileContent = fs.readFileSync(file.localPath);
+    const fileContent = fs.readFileSync(filePath);
     const mimeType = mime.lookup(file.name);
     res.setHeader('Content-Type', mimeType);
     return res.send(fileContent);
