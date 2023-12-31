@@ -5,6 +5,7 @@ import { ObjectId } from 'mongodb';
 import dbClient from './utils/db';
 
 const fileQueue = new Queue('fileQueue');
+const userQueue = new Queue('userQueue');
 
 fileQueue.process(async (job, done) => {
   const { fileId, userId } = job.data;
@@ -41,4 +42,20 @@ fileQueue.on('failed', (job, err) => {
   console.log(`Job failed with error ${err.message}`);
 });
 
-export default fileQueue;
+userQueue.process(async (job, done) => {
+  const { userId } = job.data;
+
+  if (!userId) {
+    throw new Error('Missing userId');
+  }
+
+  const user = await dbClient.fetchUserByUserId(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  console.log(`Welcome ${user.email}!`);
+  done();
+});
+
+export {fileQueue, userQueue};

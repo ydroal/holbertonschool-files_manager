@@ -7,7 +7,7 @@ import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 import fileUtils from '../utils/files';
 import { getUserId } from './UsersController';
-import fileQueue from '../worker';
+import { fileQueue } from '../worker';
 
 async function postUpload(req, res) {
   const fileType = ['folder', 'file', 'image'];

@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
+import { userQueue } from '../worker';
 
 async function postNew(req, res) {
   const { email, password } = req.body;
@@ -17,6 +18,7 @@ async function postNew(req, res) {
 
   try {
     const result = await dbClient.insertUser(email, hashedPassword);
+    await userQueue.add({ userId: result.insertedId.toString() });
     return res.status(201).json({ id: result.insertedId.toString(), email });
   } catch (err) {
     console.error(err);
